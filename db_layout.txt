@@ -1,0 +1,16 @@
+db.users {
+	name: screen name
+	email: email
+	pwhash: hashed password
+	rooms: list of owned room names
+	session: current session id
+}
+
+db.rooms {
+	name: room name
+	owner: owner name
+	mods: list of moderator names
+	bannedAccounts: list of banned account names
+	bannedAddrs: list of banned IPs
+	showUserlist: whether to show userlist by default
+}

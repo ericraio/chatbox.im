@@ -1,0 +1,120 @@
+
+<body>
+	<script type="text/javascript">
+	$(function () {
+		// Displaying first list email field 
+		$("ul li:first").show();
+		// Regular Expressions
+		var ck_username = /^[A-Za-z0-9_]{3,20}$/;
+		var ck_email = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+		var ck_password = /^[A-Za-z0-9!@#$%^&*()_]{6,20}$/;
+		// Email validation
+		$('#email').keyup(function () {
+			var email = $(this).val();
+			if(email == "") {
+				$(this).next().hide();
+				return;
+			}
+			if(!ck_email.test(email)) {
+				$(this).next().show().html("Enter a valid email");
+			} else {
+				$(this).next().hide();
+				$("li").next("li.username").slideDown({
+					duration: 'slow',
+					easing: 'easeOutElastic'
+				});
+			}
+		});
+		// Username validation
+		$('#username').keyup(function () {
+			var username = $(this).val();
+			if(username == "") {
+				$(this).next().hide();
+				return;
+			}
+			if(!ck_username.test(username)) {
+				$(this).next().show().html("Min 3 letters or numbers ");
+			} else {
+				$(this).next().hide();
+				$("li").next("li.password").slideDown({
+					duration: 'slow',
+					easing: 'easeOutElastic'
+				});
+			}
+		});
+		// Password validation
+		$('#password').keyup(function () {
+			var password = $(this).val();
+			if(password == "") {
+				$(this).next().hide();
+				return;
+			}
+			if(!ck_password.test(password)) {
+				$(this).next().show().html("Min 6 letters or numbers");
+			} else {
+				$(this).next().hide();
+				$("li").next("li.submit").slideDown({
+					duration: 'slow',
+					easing: 'easeOutElastic'
+				});
+			}
+		});
+	});
+	</script>
+	<div id="reglogo">
+		<a href="{{ url_for('main') }}"><img src="/static/images/logo.png" height="75px" id="logo" /></a>
+	</div>
+	<br /><br /><br /><br /><br />	
+	<div class="wrapper">
+	<div id="signon">
+		<div>
+			<h1>Sign On</h1>
+		</div>		
+		<form method="POST" action="{{ url_for('login_post') }}">
+				<div>	
+					<label>screen name:</label><br />
+					<input type="text" name="name" />
+				</div>
+				<div>
+					<label>password: </label><br />
+					<input type="password" name="pw" />
+				</div>
+				<div>
+					<input type="submit" />
+				</div>	
+		</form>
+	</div>
+
+	<div id="join">
+		<div>
+			<h1>Join Chatbox</h1><br />
+		</div>
+		<form method="post" action="{{ url_for('register_post') }}">
+			<div class="username">
+				<label>screen name: </label><br />
+				<input type="text" name="name" id="username" />
+				<span class="error"></span>
+			</div>
+			<div class="email">
+				<label>email: </label><br />
+				<input type="text" name="email" id="email" />
+				<span class="error"></span>
+			</div>
+			<div class="password">
+				<label>password: </label><br />
+				<input type="password" name="pw" id="password" />
+				<span class="error"></span>
+			</div>
+			<div class="password">
+				<label>confirm password: </label><br />
+				<input type="password" name="cpw" id="password" />
+				<span class="error"></span>
+			</div>
+			<div class="submit">
+				<input type="submit" value=" Register " />
+			</div>
+		</form>
+		<br /><br /><br />
+	</div>
+
+</body>

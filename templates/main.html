@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chatbox.im</title>
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'style.css') }}" />
+		<link rel="stylesheet" type="text/css" href="/static/facebox/facebox.css" />		
+		<script src="{{ url_for('static', filename = 'jquery-1.4.4.min.js') }}" type="text/javascript"></script>
+		<script src="/static/facebox/facebox.js" type="text/javascript"></script>
+		<link rel="stylesheet" type="text/css" href="/static/feedback/feedbackBadge.css" /> 
+		<script type="text/javascript" src="/static/feedback/jquery.feedbackBadge.min.js"></script>
+		<script type="text/javascript"> 
+		jQuery(document).ready(function ($) {
+		    $('a[rel*=facebox]').facebox({
+		        loadingImage: '/static/facebox/loading.gif',
+		        closeImage: '/static/facebox/closelabel.png'
+		    })
+		})
+
+		$(document).ready(function () {
+		    $('#feedback-badge').feedbackBadge({
+		        css3Safe: $.browser.safari ? true : false,
+		        onClick: function () {
+		            alert('A Wild Hooker Appeared');
+		            return false;
+		        }
+		    });
+		});
+		</script>
+
+ 	<body>
+<!--
+################################################################################
+##### HEADER
+################################################################################
+-->
+
+		<div id="header">
+			<a href="{{ url_for('main') }}"><img src="/static/images/logo.png" height="75px" id="logo" /></a>	
+		</div>
+		<div>
+			<img src="/static/images/scope.png" id="scope" />
+		</div>
+		
+		<div id="chatnow">
+			<a href="{{ url_for('register') }}" rel="facebox"><img src="/static/images/chatnow.png"></a>
+		</div>
+		
+		
+
+		
+<!--
+################################################################################
+##### CONTENT
+################################################################################
+-->	
+<br><br><br><br><br><br>
+
+
+		<div id="contentmain">
+			This front page will be redesigned
+			
+</div>
+
+<!--
+################################################################################
+##### FOOTER
+################################################################################
+-->	
+<a href="feedback_form.html" title="Give us feedback" id="feedback-badge"><span>Feedback</span></a>	
+	</body>
+</html>
+
+
+	
+

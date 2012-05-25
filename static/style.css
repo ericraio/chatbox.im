@@ -1,0 +1,272 @@
+/**************************************************************
+* GENERAL
+**************************************************************/
+body {
+	background-color: #dedede;
+	font-size:12px;
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+}
+
+/**************************************************************
+* MAIN PAGE
+**************************************************************/
+#header {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	min-height: 125px;
+	min-width: 970px;
+	background-color: #000;
+	overflow: hidden;
+	z-index: 99;
+}
+
+#topbar {
+	width: 100%;
+	min-height: 150;
+	min-width: 970px;
+	background-color: #09b6ee;
+}
+
+#scope {
+	position: absolute;
+	top: 115px;
+	left:0px; 
+	height: 374px;
+	width: 100%;
+	overflow: hidden;
+}
+
+#chatnow {
+	position: absolute;
+	left: 875px;
+	top: 135px;
+	z-index: 100;
+}
+
+#logo {
+	float: left;
+	margin: 30px 115px 0 100px;	
+}
+
+
+#footer {
+	position: absolute;
+	width: 100%;
+	min-height: 125px;
+	min-width: 970px;
+	background: #171718;
+	overflow: hidden;
+	z-index: 200;	
+}
+
+#contentmain {
+	position: absolute;
+	top: 500px;	
+	float: center;
+	overflow: hidden;
+}
+
+
+
+/**************************************************************
+* LAYOUT
+**************************************************************/
+div.color_bar {
+  position:absolute;
+  top: 0px;
+	left: 0px;
+  height: 3px;
+  background-color:#00aeff;
+  width:100%;
+}
+
+#content {
+	position: absolute;
+	top: 50px;
+	color: #000;
+	float: left;
+	overflow: hidden;
+}
+
+div#topbar {
+  position:absolute;
+	left: 0px;
+  height: 3px;
+  width:100%;
+	min-height: 35px;
+	color: #cccccc;
+	top: 3px;
+	background-image: url(images/topbg.png);
+	background-repeat:repeat;
+
+}
+.logo {
+	height: 30px;
+	width: 108px;
+	position: absolute;
+	left: 150px;
+	top: 3px;
+}
+
+.search{
+	position: relative;
+	top: 5px;
+	left: 280px;
+	background-color:transparent;
+	float:left;
+	margin: 0 auto;
+}
+
+.searchbg
+{
+	position: relative;
+	border:0;
+	padding:0;
+	width: 200px;
+	height: 25px;
+	display:block;
+	border: 0;
+	outline: 0 none;
+  text-align: left;
+  cursor: pointer;
+}
+
+div.mainbar{
+	top: -16px;
+	right: 150px;
+	position:fixed;
+
+}
+
+.mainMenu li a{
+	margin-bottom: 1px;
+	display:block;
+	font-weight:bold;
+	color:#cccccc;
+	line-height: 15px;
+	text-decoration:none;
+}
+
+
+.staticMenu dl{ }
+.staticMenu dd { position:relative; }
+.staticMenu dt a {
+	list-style-type: none;
+	padding:5px 4px 5px 4px;
+	margin-bottom:1px;
+	display:block;
+	font-weight:bold;
+	color:#ccc;
+	line-height:15px;
+	text-decoration:none;
+}
+
+.staticMenu dt a.selected{
+	background: #fff;
+	color: #000;
+	position:relative;
+	z-index:99;
+	padding-bottom:6px;
+}
+
+.staticMenu dt a:hover{
+	background: #fff;
+	color: #000;
+	position:relative;
+	z-index:99;
+	padding-bottom:6px;
+}
+
+.dropdownglobalchange {
+	
+}
+.staticMenu dd ul {
+	display:none;
+  list-style:none;
+	background-color: #fff;	
+	position:absolute;
+  cursor:pointer;
+	color: #000;
+}
+
+ul.mainMenuSub{
+	position:absolute;
+	top:-2px;
+	left:-1px;
+	padding:2px;
+	border:1px solid #000;
+	background: #fff;
+	color: #000;
+}
+
+ul.mainMenuSub li.seperator{
+	width:223px;
+	height:2px;
+	display:block;
+	background-color: #ccc;
+	margin-bottom:6px;
+	margin-top:4px;
+	overflow:visible;
+}
+
+ul.mainMenuSub a {
+	color: #4F84B8;
+}
+
+ul.mainMenuSub a:hover {
+	color: #000;
+	background: #ccc;
+}
+
+
+
+
+/**************************************************************
+* HOME
+**************************************************************/
+
+
+.ui-autocomplete-category {
+	font-weight: bold;
+	padding: .2em .4em;
+	margin: .8em 0 .2em;
+	line-height: 1.5;
+}
+
+/**************************************************************
+* REGISTER / LOG IN
+**************************************************************/
+
+
+div.wrapper { 
+	width: 500px;
+	background: #dedede;
+	position: relative; 
+	clear: both; 
+}
+
+.error {
+	color: #F00;
+	font-weight: bold;
+}
+
+div#join { 
+	width: 67%; 
+	left: 7%;
+	position: relative; 
+	float: left; 
+}
+
+div#signon { 
+	width: 33%;  
+	position: relative; 
+	float: right; 
+}
+
+#reglogo {
+  position: absolute;
+  top: 0%;
+  left: 20%;
+}

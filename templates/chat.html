@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chatbox.im - {{ env["room"] }}</title>
+		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta names="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<script src="{{ url_for('static', filename = 'uki.min.js') }}"></script>
+		<script src="{{ url_for('static', filename = 'prototype.js') }}"></script>
+		<script src="{{ url_for('static', filename = 'webio.js') }}"></script>
+		<script src="{{ url_for('static', filename = 'wnd/wnd.js') }}"></script>
+		<script src="{{ url_for('static', filename = 'xregexp.js') }}"></script>
+		<style>
+			/* Body */
+			body {background-color: #000; overflow: hidden}
+			
+			/* wnd.js */
+			.wnd_full {border: 1px solid black; border-radius: 3px}
+			.wnd_titlebar {background-color: #999; padding: 2px; border-bottom: 1px solid black}
+			.wnd_content {background-color: #F9F}
+			
+			/* Chat: layout */
+			#linkbar {color: #FFF; text-align: center}
+			#msga {overflow: auto; border: 1px solid black; background-color: #FFF}
+			#usrl {background-color: #FFF; border: 1px solid black; overflow: auto}
+			#toolbar {background-color: #999; border: 1px solid black; padding-top: 1px; padding-bottom: 1px; padding-right: 2px}
+			
+			/* Chat: messages */
+			.msg {border-bottom: 1px solid black; overflow: hidden}
+			.msgimg {float: left; border-right: 1px solid #777; height: 24px; width: 24px; margin-right: 5px}
+			.msgcontent {float: left}
+			.msgtime {float: right; font-size: 9px; color: #777}
+			.error {color: #F00; font-weight: bold}
+			
+			/* Chat: userlist */
+			.usrl_entry {border-bottom: 1px solid black; overflow: hidden}
+			.usrl_img {float: left; border-right: 1px solid #777; height: 20px; width: 20px; margin-right: 5px}
+			.usrl_txt {float: left}
+			#usrl_label {border-bottom: 1px solid black; background-color: #777; color: #FFF; text-align: center; font-size: 10px; font-weight: bold}
+			
+			/* Toolbar */
+			.toolbar_button {width: 16px; height: 16px; float: right}
+			
+			/* Panic */
+			.panic {width: 100%; height: 100%; text-align: center; text-valign: middle; color: red}
+		</style>
+		<script>
+			////
+			// Globals
+			////
+			var session; // Session
+			var env = {{ env | tojson | safe }}; // Data from the server, dynamically passed to it.
+			var room = env["room"];
+			var scrollBack = 0; //0 = no scrollback, 1 = scrolled back once, etc
+			var messageHistory = [];
+			var typedMessage = false;
+			var shiftDown = false;
+			
+			////
+			// Util
+			////
+			function escapeHtml(str) { //probably enough, can't open a tag so nothing to worry about
+				str = str.replace(/</g, "&lt;");
+				return str;
+			}
+			
+			function parseMessage(msg) {
+				msg = escapeHtml(msg);
+				msg = msg.replace(new XRegExp("https?://[^' ]+", "gi"), function(link) {
+					var temp;
+					if(temp = new XRegExp("^https?://(www\.)?youtube.com/watch\\?v=(?<vidid>[^&\" ]+)+", "gi").exec(link)) {
+						return "<a style='color: #95F' href='javascript:void(0)' onclick='showYoutubeVideo(\"" + temp.vidid + "\")'>Youtube: " + temp.vidid + "</a>";
+					}
+					else {
+						return "<a href='" + link + "' target='_blank'>" + link + "</a>";
+					}
+				});
+				return msg;
+			}
+			
+			////
+			// Load balancing (well, practically unused for now)
+			////
+			function getSessionNode() {
+				return "/chat";
+			}
+			
+			////
+			// Initialization / Cleanup
+			////
+			function init() {
+				initUki();
+				initSession();
+			}
+			
+			function cleanup() {
+				session.close();
+			}
+			
+			////
+			// UI
+			////
+			function initUki() {
+				uki(
+					{view: "Box", id: "container", rect: "0 0 400 300", anchors: "top bottom left right", childViews: [
+						{view: "HFlow", rect: "0 0 400 30", anchors: "top left right", childViews: [
+							{view: "Image", src: "http://img534.imageshack.us/img534/2463/logoso.jpg", rect: "0 0 100 30"},
+							{view: "Label", id: "linkbar", rect: "0 0 300 30", anchors: "top left right", html: "Log in | Room: " + (room || "main")}
+						]},
+						{view: "Box", id: "ma", rect: "0 30 400 225", anchors: "top bottom left right", childViews: [
+							{view: "Box", id: "msgaa", rect: "0 0 200 225", anchors: "top bottom left right", childViews: [
+								{view: "Box", id: "msga", rect: "0 0 200 207", anchors: "top bottom left right"},
+								{view: "Box", id: "toolbar", rect: "0 207 200 18", anchors: "left right bottom"}
+							]},
+							{view: "Box", id: "usrl", rect: "200 0 200 225", anchors: "top bottom right"}
+						]},
+						{view: "Box", rect: "2 258 398 40", anchors: "bottom left right", childViews: [
+							{view: "MultilineTextField", id: "msgi", rect: "0 0 396 40", anchors: "bottom left right", value: "Type a message and press enter to chat!"},
+						]}
+					]}
+				).attachTo(window, "400 300");
+				
+				if(!env["showUserlist"]) {
+					setUserlistVisible(false);
+				}
+				
+				var usrlLabel = document.createElement("div");
+				usrlLabel.id = "usrl_label";
+				usrlLabel.innerHTML = "people here";
+				$("usrl").appendChild(usrlLabel);
+				
+				addToolbarButton("/static/images/banlist.png", function(e) {
+					var w = new Window("Banlist");
+					w.content.style.width = "300px";
+					w.content.style.height = "400px";
+					uki(
+						{view: "Box", rect: "300 400", anchors: "top left bottom right", childViews: [
+							{view: "Box", rect: "0 0 300 30", anchors: "left right top", background: "theme(panel)", childViews: [
+							]}
+						]}
+					).attachTo(w.content, "300 400")
+					document.body.appendChild(w.wnd);
+				});
+				
+				addToolbarButton("/static/images/users.png", function(e) {
+					setUserlistVisible(!getUserlistVisible());
+				});
+				
+				addToolbarButton("/static/images/logo.png", function(e) {
+					showYoutubeVideo("LSTorK4d2ak");
+				});
+				
+				uki("#msgi").click(function(e) {
+					if(!typedMessage) {
+						e.source.value("");
+						typedMessage = true;
+					}
+				});
+				
+				uki("#msgi").keyup(function(e) {
+					if(e.keyCode == 16) {shiftDown = false;}
+				});
+				uki("#msgi").keydown(function(e) {
+					if(e.keyCode == 16) {shiftDown = true;}
+					if(e.keyCode == 13 && !shiftDown) {
+						var msg = e.source.value();
+						if(msg != "") {
+							if(msg.slice(0, 1) == "/") {
+								var data = msg.slice(1).split(" ");
+								var cmd = data[0];
+								var args = data.slice(1).join(" ");
+								sendSlashCommand(cmd, args);
+							}
+							else {
+								sendMessage(msg);
+							}
+							messageHistory.push(msg);
+							scrollBack = 0;
+						}
+						setTimeout(function() {e.source.value("");}, 10);
+					}
+					else if(e.keyCode == 38 || e.keyCode == 40) {
+						var scrollDir = (e.keyCode == 38) ? 1 : -1;
+						scrollBack += scrollDir;
+						if(scrollBack >= messageHistory.length) {
+							scrollBack = messageHistory.length;
+						}
+						if(scrollBack < 0) {
+							scrollBack = 0;
+						}
+						setTimeout(function() {
+							if(scrollBack != 0) {
+								e.source.value(messageHistory[messageHistory.length - scrollBack]);
+							}
+							else {
+								e.source.value("");
+							}
+						}, 10);
+					}
+				});
+			}
+			
+			function panic(reason) {
+				var container = uki("#container")[0];
+				container.dom().innerHTML = "";
+				var row = uki(
+					{view: "Label", rect: "0 0 400 300", anchors: "top bottom left right", html: "<div class='panic'>" + reason + "</div>", multiline: true}
+				);
+				row.attachTo(container.dom(), "400 300");
+			}
+			
+			function addToolbarButton(pic, onclick) {
+				var elem = document.createElement("img");
+				elem.addClassName("toolbar_button");
+				elem.src = pic;
+				elem.style.cursor = "pointer";
+				elem.onclick = onclick;
+				$("toolbar").appendChild(elem);
+				return elem;
+			}
+			
+			function showYoutubeVideo(vidId) {
+				var w = new Window("Video: " + vidId);
+				w.content.style.height = "200px";
+				w.content.style.width = "300px";
+				w.content.innerHTML = '<iframe width="100%" height="100%" src="http://www.youtube.com/embed/' + vidId + '" frameborder="0"></iframe>';
+				document.body.appendChild(w.wnd);
+			}
+			
+			function getUserlistVisible() {
+				return uki("#usrl").visible();
+			}
+			function setUserlistVisible(visible) {
+				uki("#usrl").visible(visible);
+				var rMsga, rToolbar;
+				if(visible) {
+					rMsga = new uki.geometry.Rect(0, 0, uki("#ma").rect().width - 202, uki("#ma").rect().height - 20);
+					rToolbar = new uki.geometry.Rect(0, uki("#ma").rect().height - 18, uki("#ma").rect().width - 200, 18);
+				}
+				else {
+					rMsga = new uki.geometry.Rect(0, 0, uki("#ma").rect().width, uki("#ma").rect().height - 20);
+					rToolbar = new uki.geometry.Rect(0, uki("#ma").rect().height - 18, uki("#ma").rect().width, 18);
+				}
+				uki("#msga").rect(rMsga).layout();
+				uki("#toolbar").rect(rToolbar).layout();
+				uki("#ma").resizeToContents("both");
+				scrollDown();
+			}
+			
+			function addDomMessage(dom) {
+				var msga = $("msga");
+				msga.appendChild(dom);
+				if(msga.childNodes.length > 50) {
+					msga.removeChild(msga.childNodes[0]);
+				}
+				scrollDown();
+			}
+			function addMessage(msg) {
+				addDomMessage(msg.construct());
+			}
+			function scrollDown() {
+				var elem = uki("#msga")[0].dom();
+				elem.scrollTop = elem.scrollHeight;
+			}
+			
+			function Message() {
+				var self = this;
+				self.image = null;
+				self.html = "";
+				self.content = null;
+				self.time = new Date();
+				self.construct = function() {
+					var main = document.createElement("div");
+					main.addClassName("msg");
+					if(self.image != null) {
+						var img = document.createElement("img");
+						img.addClassName("msgimg");
+						img.src = self.image;
+						img.onerror = function() {
+							img.src = "/static/images/invalid.jpg";
+						}
+						main.appendChild(img);
+					}
+					if(self.content == null) {
+						var content = document.createElement("div");
+						content.innerHTML = self.html;
+					}
+					content.addClassName("msgcontent");
+					main.appendChild(content);
+					if(self.time != null) {
+						var time = document.createElement("div");
+						time.addClassName("msgtime");
+						var year = self.time.getFullYear();
+						var month = self.time.getMonth() + 1; // <-- jan = 0 + 1; dec = 11 + 1
+						var days = self.time.getDate();
+						var hours = self.time.getHours();
+						var minutes = self.time.getMinutes();
+						var seconds = self.time.getSeconds();
+						if(minutes < 10) {minutes = "0" + minutes;}
+						if(seconds < 10) {seconds = "0" + seconds;}
+						time.innerHTML = days + "/" + month + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+						main.appendChild(time);
+					}
+					return main;
+				}
+			}
+			
+			function getUserlistRow(iid) {
+				return $("row_" + iid);
+			}
+			function addUserlistRow(iid, src) {
+				var elem;
+				if(elem = getUserlistRow(iid)) {
+					removeUserlistRow(iid);
+				}
+				elem = document.createElement("div");
+				var img = document.createElement("img");
+				img.src = "/img/" + src + ".jpg";
+				img.onerror = function() {img.src = "/static/images/invalid.jpg"}
+				img.addClassName("usrl_img");
+				var txt = document.createElement("div");
+				txt.innerHTML = src;
+				txt.addClassName("usrl_txt");
+				elem.addClassName("usrl_entry");
+				elem.id = "row_" + iid;
+				elem.appendChild(img);
+				elem.appendChild(txt);
+				$("usrl").appendChild(elem);
+				return elem;
+			}
+			function removeUserlistRow(iid) {
+				var elem = getUserlistRow(iid);
+				elem.parentNode.removeChild(elem);
+			}
+			
+			////
+			// Session
+			////
+			function initSession() {
+				session = new webio.Session(getSessionNode());
+				session.onDenied = function(reason) {panic(reason);};
+				session.onAccepted = function() {};
+				session.onDisconnect = function() {panic("Disconnected.");};
+				session.onMessage = function(msg) {
+					var data = msg.evalJSON(true);
+					try {
+						switch(data.type) {
+							case "msg":
+								var m = new Message();
+								if(!data.anon) {m.image = "/img/" + data.src + ".jpg";}
+								m.html = "<b><u>" + data.src + ":</u></b> " + parseMessage(data.msg);
+								addMessage(m);
+								break;
+							case "emote":
+								var m = new Message();
+								if(!data.anon) {m.image = "/img/" + data.src + ".jpg";}
+								m.html = "<b>*" + data.src + " " + parseMessage(data.msg) + "*</b>";
+								addMessage(m);
+								break;
+							case "whis":
+								var m = new Message();
+								if(!data.anon) {m.image = "/img/" + data.src + ".jpg";}
+								m.html = "<b><u>[WHIS]</u> " + data.src + ":</b> " + parseMessage(data.msg);
+								addMessage(m);
+								break;
+							case "error":
+								var m = new Message();
+								m.html = "<img height='13px' src='/static/images/error.png'></img> <span class='error'>" + escapeHtml(data.msg) + "</span>";
+								addMessage(m);
+								break;
+							case "kick":
+								var m = new Message();
+								m.html = "<b>" + data.src + "</b> has kicked <b>" + data.tg + "</b>!"
+								addMessage(m);
+								break;
+							case "refresh":
+								window.location.reload();
+								break;
+							case "usrl":
+								switch(data.cmd) {
+									case "init":
+										data.users.each(function(dat) {
+											addUserlistRow(dat.iid, dat.src);
+										});
+										break;
+									case "count":
+										var msg;
+										if(data.amt == 1) {msg = " person here";}
+										else {msg = " people here";}
+										$("usrl_label").innerHTML = data.amt + msg;
+										break;
+									case "add":
+										addUserlistRow(data.iid, data.src);
+										break;
+									case "remove":
+										removeUserlistRow(data.iid);
+										break;
+								}
+						}
+					}
+					catch(err) {
+						console.log(err);
+					}
+				};
+				session.start(room);
+			}
+			
+			function sendMessage(msg) {
+				session.send(Object.toJSON({"type": "msg", "msg": msg}));
+			}
+			function sendSlashCommand(cmd, args) {
+				session.send(Object.toJSON({"type": "slc", "cmd": cmd, "args": args}));
+			}
+		</script>
+	</head>
+	<body onload="init()" onunload="cleanup()">
+	</body>
+</html>

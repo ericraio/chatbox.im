@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chatbox.im</title>
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'style.css') }}" />
+		<link rel="stylesheet" type="text/css" href="/static/facebox/facebox.css" />
+		<link rel="stylesheet" type="text/css" href="/static/jqueryui/css/redmond/jquery-ui-1.8.12.custom.css" />				
+		<script src="{{ url_for('static', filename = 'jquery-1.4.4.min.js') }}" type="text/javascript"></script>
+		<script src="/static/facebox/facebox.js" type="text/javascript"></script>
+		<script src="/static/jqueryui/jquery-ui-1.8.12.custom.min.js" type="text/javascript"></script>
+		
+				
+	</head>
+	<body>
+<!--
+################################################################################
+##### HEADER
+################################################################################
+-->		
+
+<div class="color_bar"></div>
+
+  <div id="topbar">
+		<div><img src="/static/images/homelogo.png" class="logo" /></div>
+
+    <div class="search">
+      <input id="search" class="searchbg" value=" Search" onfocus=
+      "if (this.value==this.defaultValue) this.value='';" />
+    </div>
+
+		<div class="mainbar">
+		        <ul class="mainMenu" style="float:right;">
+		            <dl class="staticMenu">
+			<!-- Lumz, need you to have the screen name reflect if you are logged in-->
+		              <dt><a href="/settings" onclick="return false;">Atrosity <img src="/static/images/downarrow.png" height="7"></a></dt>
+
+		              <dd>
+		                <ul class="mainMenuSub" style="right:-1px; left:auto;">
+		                  <li><a href="javascript:;" class="dropdownglobalchange" id="A" style=
+		                  "cursor:pointer;" name="A" rel="facebox">Edit Profile</a></li>
+		                  <li><a href="javascript:;" class="dropdownglobalchange" id="F" style=
+		                  "cursor:pointer;" name="F">Account Settings</a></li>
+		                  <li><a href="javascript:;" class="dropdownglobalchange" id="F" style=
+		                  "cursor:pointer;" name="F">Help</a></li>
+		                  <li class="seperator"><!-- --></li>
+		                  <li><a href="/logout" class="dropdownglobalchange" id="M" style=
+		                  "cursor:pointer;" name="M">Log out</a></li>
+		                </ul>
+		              </dd>
+		            </dl>
+		          </li>
+		        </ul>
+		</div>
+	</div>
+    
+		
+<!--
+################################################################################
+##### Content
+################################################################################
+-->
+
+		<div id="content">
+				{% block body %}{% endblock %}
+		</div>
+		
+		
+<!--
+################################################################################
+##### FOOTER
+################################################################################
+-->		
+
+<!--
+################################################################################
+##### JAVASCRIPT
+################################################################################
+-->
+<script type="text/javascript"> 
+jQuery(document).ready(function ($) {
+    $('a[rel*=facebox]').facebox({
+        loadingImage: '/static/facebox/loading.gif',
+        closeImage: '/static/facebox/closelabel.png'
+    })
+})
+// Example data, type a or p please configure this to work with our db lumz :3
+$(function () {
+    var chatboxdata = [{
+        label: "anders",
+        category: ""
+    }, {
+        label: "andreas",
+        category: ""
+    }, {
+        label: "antal",
+        category: ""
+    }, {
+        label: "annhhx10",
+        category: "Products"
+    }, {
+        label: "annk K12",
+        category: "Products"
+    }, {
+        label: "annttop C13",
+        category: "Products"
+    }, {
+        label: "anders andersson",
+        category: "People"
+    }, {
+        label: "andreas andersson",
+        category: "People"
+    }, {
+        label: "andreas johnson",
+        category: "People"
+    }];
+
+    $("#search").catcomplete({
+        delay: 0,
+        source: chatboxdata
+    });
+});
+
+</script>
+<script>
+
+$.widget("custom.catcomplete", $.ui.autocomplete, {
+    _renderMenu: function (ul, items) {
+        var self = this,
+            currentCategory = "";
+        $.each(items, function (index, item) {
+            if (item.category != currentCategory) {
+                ul.append("<li class='ui-autocomplete-category'>" + item.category + "</li>");
+                currentCategory = item.category;
+            }
+            self._renderItem(ul, item);
+        });
+    }
+});
+var SubMenutimer;
+var last_o;
+</script>
+<script>
+
+$(".mainbar").ready(function() {
+	$(".staticMenu dt a").click(function() {
+
+		$(".staticMenu dd ul").not($(this).parents(".staticMenu").find("ul")).hide();
+		$(".staticMenu dt a").not($(this)).removeClass("selected");
+		$(this).parents(".staticMenu").find("ul").toggle();
+
+		if($(this).parents(".staticMenu").find("ul").css("display") == "none"){
+			$(this).removeClass("selected");
+		}else{
+			$(this).addClass("selected");
+		}
+
+	});
+
+	$(".staticMenu dd ul li a").click(function() {
+		var text = $(this).html();
+		$(".staticMenu dt a span").html(text);
+		$(".staticMenu dd ul").hide();
+	}); 
+
+	$(document).bind('click', function(e) {
+		var $clicked = $(e.target);
+		if (! $clicked.parents().hasClass("staticMenu")){
+			$(".staticMenu dd ul").hide();
+			$(".staticMenu dt a").removeClass("selected");
+		}
+
+	});
+});
+
+function openSubMenu(o){
+	cancelSubMenuClose();
+
+	if(last_o) $(last_o).parent().find("div").hide();
+
+	last_o = o;
+	$(o).parent().find("div").show();
+}
+
+function closeSubMenu(){
+	SubMenutimer = setTimeout("close()",500);
+}
+
+function cancelSubMenuClose(){
+	clearTimeout(SubMenutimer);
+}
+
+function close(){
+	$(last_o).parent().find("div").hide();
+}
+</script>
+	</body>
+</html>
